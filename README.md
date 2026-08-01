@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bata CSR Portal
 
-## Getting Started
+Management software for Bata's school partnership programme: Bata funds and manages
+public schools through NGO partners. Directors, Bata employees, and NGOs plan
+projects, schedule school activities with shared checklists, and track employee
+volunteer hours.
 
-First, run the development server:
+Built with **Next.js 16** (App Router, Server Actions), **MongoDB** (Mongoose),
+**Cloudflare R2** for photos, and **EmailJS** for credential emails.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then fill in the values
+npm run seed                 # creates the first director account
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in at `/login` with the seeded director account
+(default: `director@bata.com` / `Director@123` — change it in Settings).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Roles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Capability | Director | Employee | NGO |
+|---|---|---|---|
+| Create/edit/delete employees & NGOs, reset passwords | ✅ | — | — |
+| Create/edit projects & schools | ✅ | view | — |
+| Schedule/edit activities (school + NGO + participants + points) | ✅ | ✅ | — |
+| See assigned activities & shared checklist | ✅ | ✅ | ✅ |
+| Tick checklist points, add remarks, upload photos, update status | ✅ | ✅ | ✅ |
+| Engagement reports (hours per employee, by project & category) | ✅ | own stats | — |
+| Change own password | ✅ | ✅ | ✅ |
 
-## Learn More
+Accounts are created by the director; new accounts get a temporary password
+(emailed via EmailJS when configured, and always shown once on screen) and must
+change it at first login.
 
-To learn more about Next.js, take a look at the following resources:
+## Environment (.env.local)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `MONGODB_URI` — local MongoDB or Atlas connection string
+- `SESSION_SECRET` — long random string (`openssl rand -base64 32`)
+- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` —
+  Cloudflare R2 credentials (optional; photo uploads are skipped when unset)
+- `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`,
+  `EMAILJS_PRIVATE_KEY` — EmailJS (optional; the EmailJS template must use the
+  variables `to_email`, `to_name`, `subject`, `message`)
+- `DIRECTOR_NAME` / `DIRECTOR_EMAIL` / `DIRECTOR_PASSWORD` — used by `npm run seed`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Auth**: stateless JWT session cookie (`jose`), bcrypt password hashes.
+  `proxy.ts` does the optimistic redirect; every page/action re-verifies the
+  user against the database in `lib/session.ts` (`requireUser`).
+- **Server Actions** in `lib/actions/*` handle all mutations with per-role checks.
+- **Time tracking**: completed activities × duration × participants, aggregated
+  in `/dashboard/reports` (week / month / last month / all time).
+- **Images** are stored in R2 and served through `/api/files/[key]`, which
+  redirects to a short-lived presigned URL (sign-in required).
+# bata-app
