@@ -1,9 +1,9 @@
 # Bata CSR Portal
 
-Management software for Bata's school partnership programme: Bata funds and manages
-public schools through NGO partners. Directors, Bata employees, and NGOs plan
-projects, schedule school activities with shared checklists, and track employee
-volunteer hours.
+Management software for the **Bata Children's Program**: Bata funds community
+projects delivered by NGO partners. The CSR team creates projects and assigns each
+to a partner; the NGO schedules the activities on the ground; Bata employees follow
+the causes they care about, get invited, and turn up.
 
 Built with **Next.js 16** (App Router, Server Actions), **MongoDB** (Mongoose),
 **Cloudflare R2** for photos, and **EmailJS** for credential emails.
@@ -22,19 +22,30 @@ Sign in at `/login` with the seeded director account
 
 ## Roles
 
-| Capability | Director | Employee | NGO |
+| Capability | CSR Team | Employee | NGO |
 |---|---|---|---|
-| Create/edit/delete employees & NGOs, reset passwords | ✅ | — | — |
-| Create/edit projects & schools | ✅ | view | — |
-| Schedule/edit activities (school + NGO + participants + points) | ✅ | ✅ | — |
-| See assigned activities & shared checklist | ✅ | ✅ | ✅ |
-| Tick checklist points, add remarks, upload photos, update status | ✅ | ✅ | ✅ |
-| Engagement reports (hours per employee, by project & category) | ✅ | own stats | — |
-| Change own password | ✅ | ✅ | ✅ |
+| Create / edit / suspend / delete projects | ✅ | — | — |
+| Onboard NGO partners, reset passwords | ✅ | — | — |
+| See a project | all | all | **only their own** |
+| Schedule & edit activities (date, time, location) | ✅ | — | ✅ (own projects) |
+| Follow a project to get invited | ✅ | ✅ | — |
+| Confirm / decline attendance | ✅ | ✅ | — |
+| Record who actually attended | ✅ | — | ✅ |
+| Engagement reports + PDF export | ✅ | own stats | — |
+| Edit own name, email, password, photo | ✅ | ✅ | ✅ |
 
-Accounts are created by the director; new accounts get a temporary password
-(emailed via EmailJS when configured, and always shown once on screen) and must
-change it at first login.
+Employees **self-register** at `/signup` with their Bata employee code (each code can
+only be used once). NGO accounts are created by the CSR team.
+
+## The activity lifecycle
+
+1. CSR team creates a project, assigns it to one NGO partner, and sets its location.
+2. Employees browse projects and press **I'm interested** to follow one.
+3. The NGO schedules an activity — date, time, and a pasted Google Maps link.
+4. Everyone following that project is notified and can confirm.
+5. Each confirmation notifies **only that project's NGO** — never all partners.
+6. When the activity is completed, the NGO records who actually turned up.
+7. Only NGO-confirmed attendance counts towards volunteer hours in reports.
 
 ## Environment (.env.local)
 
@@ -53,8 +64,12 @@ change it at first login.
   `proxy.ts` does the optimistic redirect; every page/action re-verifies the
   user against the database in `lib/session.ts` (`requireUser`).
 - **Server Actions** in `lib/actions/*` handle all mutations with per-role checks.
-- **Time tracking**: completed activities × duration × participants, aggregated
-  in `/dashboard/reports` (week / month / last month / all time).
+- **Time tracking**: hours count only where the NGO marked the volunteer present.
+  Reports cover week / month / last month / quarter / all time and export to PDF
+  via `pdf-lib` at `/dashboard/reports/pdf`.
+- **Locations** live on projects and activities, with an optional pasted Google
+  Maps link so volunteers can navigate. (There is no separate "schools" module —
+  Bata works with more than schools.)
 - **Images** are stored in R2 and served through `/api/files/[key]`, which
   redirects to a short-lived presigned URL (sign-in required).
 # bata-app

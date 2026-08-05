@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { BataLogo, BcpLogo, SiteFooter } from "@/components/brand";
 
 const stats = [
-  { value: "40+", label: "Public schools supported" },
+  { value: "40+", label: "Communities supported" },
   { value: "12", label: "NGO partners" },
   { value: "300+", label: "Activities delivered" },
   { value: "5,000+", label: "Volunteer hours" },
@@ -10,25 +11,30 @@ const stats = [
 const steps = [
   {
     step: "01",
-    title: "Director sets the stage",
-    text: "The director onboards Bata employees and NGO partners, registers public schools, and groups the work into funded projects.",
+    title: "CSR team sets it up",
+    text: "The Bata CSR team onboards NGO partners and creates each project — the cause, the location, and which partner runs it.",
   },
   {
     step: "02",
-    title: "Teams schedule activities",
-    text: "Employees plan sessions — a computer class in Purnea, a health camp, a sports day — picking the school, the NGO partner, and the Bata volunteers.",
+    title: "NGOs plan the work",
+    text: "The NGO on the ground knows when the awareness camp or the weekly distribution happens, so they schedule the activity and pin the exact location.",
   },
   {
     step: "03",
-    title: "NGOs deliver together",
-    text: "Every activity carries a shared checklist of points. The NGO sees the same plan, ticks off what was done, and adds remarks and photos.",
+    title: "Employees follow & join",
+    text: "Bata employees follow the causes they care about, get notified the moment an activity is planned, and confirm if they can be there.",
+  },
+  {
+    step: "04",
+    title: "Attendance & impact",
+    text: "The NGO is told exactly who is coming, then confirms who turned up — so every volunteered hour is counted honestly.",
   },
 ];
 
 const features = [
   {
     title: "Role-based access",
-    text: "Three tailored workspaces — Director, Bata Employee, and NGO partner — each seeing exactly what they need.",
+    text: "Three tailored workspaces — CSR team, Bata employee, and NGO partner — each seeing exactly what they need.",
     icon: (
       <path
         strokeLinecap="round"
@@ -38,8 +44,8 @@ const features = [
     ),
   },
   {
-    title: "Activity scheduling",
-    text: "Plan sessions with date, time, venue, school, NGO partner and participating employees — all in one place.",
+    title: "NGO-led scheduling",
+    text: "NGO partners plan sessions with date, time and a pinned Google Maps location, so volunteers never get lost.",
     icon: (
       <path
         strokeLinecap="round"
@@ -50,7 +56,7 @@ const features = [
   },
   {
     title: "Shared checklists",
-    text: "Each activity has agenda points visible to Bata and the NGO alike, with completion ticks and remarks.",
+    text: "Every activity carries agenda points visible to Bata and the NGO alike, with completion ticks and remarks.",
     icon: (
       <path
         strokeLinecap="round"
@@ -60,8 +66,8 @@ const features = [
     ),
   },
   {
-    title: "Volunteer time tracking",
-    text: "See how many hours each employee gave — this week, this month — broken down by project and activity type.",
+    title: "Verified time tracking",
+    text: "Hours counted only when the NGO confirms attendance — by week or month, and downloadable as a PDF.",
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
     ),
@@ -78,8 +84,8 @@ const features = [
     ),
   },
   {
-    title: "Email notifications",
-    text: "Account credentials and password resets reach people by email, so nobody is ever locked out.",
+    title: "Targeted notifications",
+    text: "Employees hear when an activity is planned; the NGO hears exactly who is joining — never a broadcast.",
     icon: (
       <path
         strokeLinecap="round"
@@ -92,33 +98,33 @@ const features = [
 
 const roles = [
   {
-    role: "Director",
+    role: "Bata CSR Team",
     color: "bg-bata-600",
     points: [
-      "Create & manage employees and NGO partners",
-      "Set up projects and register schools",
-      "Reset passwords for any account",
-      "Track every employee's volunteer hours",
+      "Onboard and manage NGO partners",
+      "Create projects and assign each to a partner",
+      "Suspend or close a project at any time",
+      "Track volunteer hours across the programme",
     ],
   },
   {
     role: "Bata Employee",
     color: "bg-zinc-800",
     points: [
-      "Browse projects and schools",
-      "Schedule activities with NGOs and schools",
-      "Build the activity checklist",
-      "Log outcomes and upload photos",
+      "Register with your employee code",
+      "Follow the projects you care about",
+      "Get notified when an activity is planned",
+      "Confirm attendance and get directions",
     ],
   },
   {
     role: "NGO Partner",
     color: "bg-violet-600",
     points: [
-      "See every activity assigned to you",
-      "Work from the shared checklist",
-      "Tick off points and add remarks",
-      "Mark sessions in progress or done",
+      "See only the projects assigned to you",
+      "Schedule activities with date, time and location",
+      "See which Bata employees are coming",
+      "Confirm who actually attended",
     ],
   },
 ];
@@ -130,7 +136,7 @@ export default function LandingPage() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-zinc-950/70 backdrop-blur-md">
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-3">
-            <img src="/bata-logo-white.svg" alt="Bata" className="h-7 w-auto" />
+            <BataLogo light className="h-7 w-auto" />
             <span className="hidden text-sm font-medium tracking-wide text-zinc-300 sm:block">
               CSR Portal
             </span>
@@ -140,12 +146,20 @@ export default function LandingPage() {
             <a href="#features" className="transition hover:text-white">Features</a>
             <a href="#roles" className="transition hover:text-white">Who it&apos;s for</a>
           </div>
-          <Link
-            href="/login"
-            className="rounded-lg bg-bata-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-bata-600/30 transition hover:bg-bata-500"
-          >
-            Sign in
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-zinc-300 transition hover:text-white"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/signup"
+              className="rounded-lg bg-bata-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-bata-600/30 transition hover:bg-bata-500"
+            >
+              Register
+            </Link>
+          </div>
         </nav>
       </header>
 
@@ -161,29 +175,30 @@ export default function LandingPage() {
         />
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
+            <BcpLogo light className="animate-fade-up mb-8 h-16 w-auto sm:h-20" />
             <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-zinc-300">
               <span className="size-1.5 rounded-full bg-bata-500" />
               Corporate Social Responsibility
             </p>
             <h1 className="animate-fade-up mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-              Stepping up for
+              Giving children
               <span className="bg-linear-to-r from-bata-400 to-bata-600 bg-clip-text text-transparent">
-                {" "}public schools
+                {" "}a step ahead
               </span>
               , together.
             </h1>
             <p className="animate-fade-up-slow mt-6 max-w-2xl text-lg leading-relaxed text-zinc-400">
-              Bata funds and manages public schools across India through trusted NGO
-              partners. This portal is where directors, Bata employees, and NGOs plan
+              Bata funds and runs community projects across India through trusted NGO
+              partners. This portal is where the CSR team, Bata employees, and NGOs plan
               projects, schedule activities, and track every volunteered hour — from a
-              computer class in Purnea to a health camp anywhere in the country.
+              menstrual hygiene camp in Purnea to a distribution drive anywhere in the country.
             </p>
             <div className="animate-fade-up-slow mt-10 flex flex-wrap gap-4">
               <Link
-                href="/login"
+                href="/signup"
                 className="rounded-xl bg-bata-600 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-bata-600/30 transition hover:-translate-y-0.5 hover:bg-bata-500"
               >
-                Sign in to the portal
+                Register as a Bata employee
               </Link>
               <a
                 href="#how"
@@ -299,29 +314,31 @@ export default function LandingPage() {
           className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.12),transparent_60%)]"
         />
         <div className="relative mx-auto max-w-3xl px-6 text-center">
-          <img src="/bata-logo-white.svg" alt="Bata" className="mx-auto h-10 w-auto" />
+          <BcpLogo light className="mx-auto h-14 w-auto" />
           <h2 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">
             Ready to make an impact?
           </h2>
           <p className="mt-3 text-bata-100">
-            Sign in with the account your director created for you.
+            Bata employees can register with their employee code. NGO partners are onboarded by the CSR team.
           </p>
-          <Link
-            href="/login"
-            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-bata-700 shadow-xl transition hover:-translate-y-0.5 hover:bg-bata-50"
-          >
-            Sign in to the portal
-          </Link>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/signup"
+              className="inline-block rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-bata-700 shadow-xl transition hover:-translate-y-0.5 hover:bg-bata-50"
+            >
+              Register as a Bata employee
+            </Link>
+            <Link
+              href="/login"
+              className="inline-block rounded-xl border border-white/40 px-8 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-800 bg-zinc-950 py-10 text-center">
-        <img src="/bata-logo-white.svg" alt="Bata" className="mx-auto h-6 w-auto opacity-70" />
-        <p className="mt-4 text-xs text-zinc-500">
-          Bata CSR Portal — funding and managing public schools with NGO partners.
-        </p>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

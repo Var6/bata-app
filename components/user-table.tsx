@@ -84,6 +84,7 @@ export function UserManager({ users, role }: { users: UserDoc[]; role: "employee
                     <p className="truncate text-xs text-zinc-500">
                       {role === "ngo" && <>Contact: {u.org?.contactPerson || u.name} · </>}
                       {u.email}
+                      {u.employeeCode ? ` · ${u.employeeCode}` : ""}
                       {u.phone ? ` · ${u.phone}` : ""}
                       {role === "employee" && u.designation ? ` · ${u.designation}` : ""}
                     </p>

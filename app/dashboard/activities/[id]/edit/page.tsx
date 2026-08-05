@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Types } from "mongoose";
 import { dbConnect } from "@/lib/db";
-import { Activity, Project, School, User, type ActivityDoc, type ProjectDoc, type SchoolDoc, type UserDoc } from "@/lib/models";
+import { Activity, Project, type ActivityDoc, type ProjectDoc } from "@/lib/models";
 import { requireUser } from "@/lib/session";
-import { canEditActivity } from "@/lib/permissions";
+import { canManageActivity } from "@/lib/permissions";
 import { updateActivity } from "@/lib/actions/activities";
 import { PageHeader } from "@/components/ui";
 import { ActivityForm } from "../../activity-form";
@@ -13,20 +13,16 @@ import { ActivityForm } from "../../activity-form";
 export const metadata: Metadata = { title: "Edit activity" };
 
 export default async function EditActivityPage(props: { params: Promise<{ id: string }> }) {
-  const user = await requireUser(["director", "employee"]);
+  const user = await requireUser(["ngo", "director"]);
   const { id } = await props.params;
   if (!Types.ObjectId.isValid(id)) notFound();
 
   await dbConnect();
   const activity = await Activity.findById(id).lean<ActivityDoc>();
-  if (!activity || !canEditActivity(user, activity)) notFound();
+  if (!activity || !canManageActivity(user, activity)) notFound();
 
-  const [projects, schools, ngos, employees] = await Promise.all([
-    Project.find({}).sort({ name: 1 }).lean<ProjectDoc[]>(),
-    School.find({}).sort({ name: 1 }).lean<SchoolDoc[]>(),
-    User.find({ role: "ngo", active: true }).sort({ "org.orgName": 1 }).lean<UserDoc[]>(),
-    User.find({ role: { $in: ["employee", "director"] }, active: true }).sort({ name: 1 }).lean<UserDoc[]>(),
-  ]);
+  const scope = user.role === "ngo" ? { ngo: user._id } : {};
+  const projects = await Project.find(scope).sort({ name: 1 }).lean<ProjectDoc[]>();
 
   return (
     <>
@@ -37,17 +33,9 @@ export default async function EditActivityPage(props: { params: Promise<{ id: st
       </div>
       <PageHeader
         title={`Edit: ${activity.title}`}
-        subtitle="Completed/remark state is kept for checklist points whose text is unchanged."
+        subtitle="Anyone who already confirmed will be notified that the details changed."
       />
-      <ActivityForm
-        action={updateActivity}
-        activity={activity}
-        projects={projects}
-        schools={schools}
-        ngos={ngos}
-        employees={employees}
-        submitLabel="Save changes"
-      />
+      <ActivityForm action={updateActivity} activity={activity} projects={projects} submitLabel="Save changes" />
     </>
   );
 }

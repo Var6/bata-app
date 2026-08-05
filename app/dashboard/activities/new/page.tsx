@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { dbConnect } from "@/lib/db";
-import { Project, School, User, type ProjectDoc, type SchoolDoc, type UserDoc } from "@/lib/models";
+import { Project, type ProjectDoc } from "@/lib/models";
 import { requireUser } from "@/lib/session";
 import { createActivity } from "@/lib/actions/activities";
-import { PageHeader } from "@/components/ui";
+import { EmptyState, PageHeader } from "@/components/ui";
 import { ActivityForm } from "../activity-form";
 
 export const metadata: Metadata = { title: "Schedule activity" };
@@ -11,32 +12,45 @@ export const metadata: Metadata = { title: "Schedule activity" };
 export default async function NewActivityPage(props: {
   searchParams: Promise<{ project?: string }>;
 }) {
-  await requireUser(["director", "employee"]);
+  const user = await requireUser(["ngo", "director"]);
   const { project } = await props.searchParams;
   await dbConnect();
 
-  const [projects, schools, ngos, employees] = await Promise.all([
-    Project.find({ status: { $ne: "completed" } }).sort({ name: 1 }).lean<ProjectDoc[]>(),
-    School.find({}).sort({ name: 1 }).lean<SchoolDoc[]>(),
-    User.find({ role: "ngo", active: true }).sort({ "org.orgName": 1 }).lean<UserDoc[]>(),
-    User.find({ role: { $in: ["employee", "director"] }, active: true }).sort({ name: 1 }).lean<UserDoc[]>(),
-  ]);
+  // NGOs may only schedule under their own, schedulable projects.
+  const scope = {
+    status: { $in: ["active", "on-hold"] as const },
+    ...(user.role === "ngo" ? { ngo: user._id } : {}),
+  };
+  const projects = await Project.find(scope).sort({ name: 1 }).lean<ProjectDoc[]>();
 
   return (
     <>
+      <div className="mb-2">
+        <Link href="/dashboard/activities" className="text-sm font-medium text-bata-600 hover:underline">
+          ← All activities
+        </Link>
+      </div>
       <PageHeader
         title="Schedule an activity"
-        subtitle="Plan a session at a school with an NGO partner and the Bata team. The points you list are shared with the NGO."
+        subtitle="You know when and where this is happening — add the details and Bata volunteers who follow the project will be invited."
       />
-      <ActivityForm
-        action={createActivity}
-        projects={projects}
-        schools={schools}
-        ngos={ngos}
-        employees={employees}
-        submitLabel="Schedule activity"
-        preselectedProject={project}
-      />
+      {projects.length === 0 ? (
+        <EmptyState
+          title="No schedulable projects"
+          hint={
+            user.role === "ngo"
+              ? "Bata hasn't assigned you an active project yet, or your projects are suspended or completed."
+              : "Create an active project first."
+          }
+        />
+      ) : (
+        <ActivityForm
+          action={createActivity}
+          projects={projects}
+          submitLabel="Schedule & notify volunteers"
+          preselectedProject={project}
+        />
+      )}
     </>
   );
 }

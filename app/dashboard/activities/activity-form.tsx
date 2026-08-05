@@ -1,16 +1,8 @@
-import { ACTIVITY_CATEGORIES, type ActivityDoc, type ProjectDoc, type SchoolDoc, type UserDoc } from "@/lib/models";
+import { ACTIVITY_CATEGORIES, type ActivityDoc, type ProjectDoc } from "@/lib/models";
 import { labelize, refId } from "@/lib/utils";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Card, Field, inputCls } from "@/components/ui";
 import type { ActionState } from "@/lib/actions/auth";
-
-/** Display name of the NGO partner assigned to a project. */
-function ngoNameFor(project: ProjectDoc, ngos: UserDoc[]): string | undefined {
-  const id = refId(project.ngo);
-  if (!id) return undefined;
-  const match = ngos.find((n) => n._id.toString() === id);
-  return match?.org?.orgName || match?.name;
-}
 
 const DURATIONS = [
   [30, "30 minutes"],
@@ -27,22 +19,19 @@ export function ActivityForm({
   action,
   activity,
   projects,
-  schools,
-  ngos,
-  employees,
   submitLabel,
   preselectedProject,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   activity?: ActivityDoc;
   projects: ProjectDoc[];
-  schools: SchoolDoc[];
-  ngos: UserDoc[];
-  employees: UserDoc[];
   submitLabel: string;
   preselectedProject?: string;
 }) {
-  const participantIds = new Set(activity?.participants.map((p) => p.toString()));
+  const loc = activity?.location;
+  const selected = refId(activity?.project) || preselectedProject || "";
+  // Prefill the venue from the project when creating a fresh activity.
+  const fallback = !activity ? projects.find((p) => p._id.toString() === selected)?.location : undefined;
 
   return (
     <Card className="p-6">
@@ -54,51 +43,29 @@ export function ActivityForm({
             name="title"
             required
             defaultValue={activity?.title}
-            placeholder="e.g. Computer Class — Batch 3"
+            placeholder="e.g. Sanitary pad distribution — Week 3"
             className={inputCls}
           />
         </Field>
 
-        <Field label="Project (sets the NGO partner)">
-          <select
-            name="project"
-            required
-            defaultValue={activity?.project.toString() ?? preselectedProject ?? ""}
-            className={inputCls}
-          >
+        <Field label="Project">
+          <select name="project" required defaultValue={selected} className={inputCls}>
             <option value="" disabled>
               Select project…
             </option>
-            {projects.map((p) => {
-              const partner = ngoNameFor(p, ngos);
-              return (
-                <option key={p._id.toString()} value={p._id.toString()}>
-                  {p.name}
-                  {partner ? ` — ${partner}` : ""}
-                </option>
-              );
-            })}
-          </select>
-        </Field>
-
-        <Field label="Category">
-          <select name="category" defaultValue={activity?.category ?? "other"} className={inputCls}>
-            {ACTIVITY_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {labelize(c)}
+            {projects.map((p) => (
+              <option key={p._id.toString()} value={p._id.toString()}>
+                {p.name}
               </option>
             ))}
           </select>
         </Field>
 
-        <Field label="School">
-          <select name="school" required defaultValue={activity?.school.toString() ?? ""} className={inputCls}>
-            <option value="" disabled>
-              Select school…
-            </option>
-            {schools.map((s) => (
-              <option key={s._id.toString()} value={s._id.toString()}>
-                {s.name} ({s.city})
+        <Field label="Type of activity">
+          <select name="category" defaultValue={activity?.category ?? "other"} className={inputCls}>
+            {ACTIVITY_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {labelize(c)}
               </option>
             ))}
           </select>
@@ -119,7 +86,7 @@ export function ActivityForm({
             <input type="time" name="startTime" required defaultValue={activity?.startTime} className={inputCls} />
           </Field>
           <Field label="Duration">
-            <select name="durationMinutes" defaultValue={activity?.durationMinutes ?? 60} className={inputCls}>
+            <select name="durationMinutes" defaultValue={activity?.durationMinutes ?? 120} className={inputCls}>
               {DURATIONS.map(([mins, label]) => (
                 <option key={mins} value={mins}>
                   {label}
@@ -129,54 +96,57 @@ export function ActivityForm({
           </Field>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-2 text-xs text-zinc-500 sm:col-span-2">
-          The NGO partner is set by the project you choose — a project belongs to
-          exactly one NGO, and only that NGO can see its activities.
-        </div>
-
-        <Field label="Venue (optional)" className="sm:col-span-2">
-          <input
-            name="venue"
-            defaultValue={activity?.venue ?? ""}
-            placeholder="e.g. School computer lab"
-            className={inputCls}
-          />
-        </Field>
-
-        <Field label="Bata participants" className="sm:col-span-2">
-          <div className="grid gap-2 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 sm:grid-cols-2">
-            {employees.length === 0 && (
-              <p className="text-sm text-zinc-400">No active employees yet — ask the director to add some.</p>
-            )}
-            {employees.map((e) => (
-              <label key={e._id.toString()} className="flex items-center gap-2 text-sm text-zinc-700">
-                <input
-                  type="checkbox"
-                  name="participants"
-                  value={e._id.toString()}
-                  defaultChecked={participantIds.has(e._id.toString())}
-                  className="size-4 rounded border-zinc-300 accent-bata-600"
-                />
-                {e.name}
-                {e.role === "director" && <span className="text-xs text-bata-600">(Director)</span>}
-              </label>
-            ))}
+        {/* Location — supplied by the NGO, who knows where it actually happens */}
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4 sm:col-span-2">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Where is it happening?
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Place / venue">
+              <input name="locName" defaultValue={loc?.name ?? fallback?.name ?? ""} placeholder="e.g. Community hall, Ward 4" className={inputCls} />
+            </Field>
+            <Field label="City / district">
+              <input name="city" defaultValue={loc?.city ?? fallback?.city ?? ""} placeholder="e.g. Purnea" className={inputCls} />
+            </Field>
+            <Field label="Address">
+              <input name="address" defaultValue={loc?.address ?? fallback?.address ?? ""} className={inputCls} />
+            </Field>
+            <Field label="State">
+              <input name="state" defaultValue={loc?.state ?? fallback?.state ?? ""} className={inputCls} />
+            </Field>
+            <Field label="Google Maps link" className="sm:col-span-2">
+              <input
+                type="url"
+                name="mapsUrl"
+                defaultValue={loc?.mapsUrl ?? fallback?.mapsUrl ?? ""}
+                placeholder="https://maps.app.goo.gl/…"
+                className={inputCls}
+              />
+              <span className="mt-1 block text-xs text-zinc-400">
+                Paste from Google Maps → Share, so Bata volunteers can navigate straight there.
+              </span>
+            </Field>
           </div>
-        </Field>
+        </div>
 
         <Field label="Description (optional)" className="sm:col-span-2">
           <textarea name="description" rows={2} defaultValue={activity?.description ?? ""} className={inputCls} />
         </Field>
 
-        <Field label="Activity points — one per line (shared with the NGO)" className="sm:col-span-2">
+        <Field label="Activity points — one per line (shared with Bata)" className="sm:col-span-2">
           <textarea
             name="points"
             rows={5}
             defaultValue={activity?.points.map((p) => p.text).join("\n") ?? ""}
-            placeholder={"Set up 10 computers before class\nTeach MS Paint basics\nCollect student attendance\nHand over practice sheets to NGO"}
+            placeholder={"Arrange 200 sanitary pad kits\nAwareness session for class 6–8 girls\nRecord attendance register\nCollect feedback from teachers"}
             className={`${inputCls} font-mono text-xs leading-relaxed`}
           />
         </Field>
+
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 sm:col-span-2">
+          Everyone following this project is notified as soon as you save, and can confirm whether
+          they will join. You will be told individually who is coming.
+        </div>
 
         <div className="sm:col-span-2">
           <SubmitButton>{submitLabel}</SubmitButton>

@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { dbConnect } from "@/lib/db";
-import { Activity, User, type Role } from "@/lib/models";
+import { Activity, Project, User, type Role } from "@/lib/models";
 import { requireUser } from "@/lib/session";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import { generateTempPassword } from "@/lib/utils";
@@ -119,7 +119,7 @@ export async function deleteUser(_prev: ActionState, formData: FormData): Promis
   if (!user || user.role === "director") return { error: "Account not found." };
 
   const inUse = await Activity.exists({
-    $or: [{ ngo: user._id }, { participants: user._id }],
+    $or: [{ ngo: user._id }, { "attendees.user": user._id }],
   });
   if (inUse) {
     return {
@@ -128,6 +128,8 @@ export async function deleteUser(_prev: ActionState, formData: FormData): Promis
     };
   }
 
+  // Drop them from any project interest lists before removing the account.
+  await Project.updateMany({ interested: user._id }, { $pull: { interested: user._id } });
   await user.deleteOne();
   revalidatePath(pathFor(user.role));
   return { success: "Account deleted." };
@@ -151,7 +153,7 @@ export async function resetPassword(_prev: UserActionState, formData: FormData):
       toEmail: user.email,
       toName: user.name,
       subject: "Bata CSR Portal — Password Reset",
-      message: `Hello ${user.name},\n\nYour password was reset by the director.\n\nTemporary password: ${temp}\n\nPlease log in and change it from Settings.\n\n— Bata CSR Portal`,
+      message: `Hello ${user.name},\n\nYour password was reset by the Bata CSR team.\n\nTemporary password: ${temp}\n\nPlease log in and change it from Settings.\n\n— Bata CSR Portal`,
     });
     emailed = sent.ok;
   }

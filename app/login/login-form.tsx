@@ -14,7 +14,7 @@ export function LoginForm() {
         <>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900">Welcome back</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Sign in as a director, Bata employee, or NGO partner.
+            Sign in as CSR team, Bata employee, or NGO partner.
           </p>
           <ActionForm action={login} className="mt-6 space-y-4">
             <Field label="Email">

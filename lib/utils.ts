@@ -33,6 +33,47 @@ export function formatHours(minutes: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
+/**
+ * How each role is named in the UI. The database keeps `director` as the
+ * role key; Bata call that team the "CSR Team", so only the label changes.
+ */
+export function roleLabel(role: string): string {
+  switch (role) {
+    case "director":
+      return "CSR Team";
+    case "employee":
+      return "Bata Employee";
+    case "ngo":
+      return "NGO Partner";
+    default:
+      return labelize(role);
+  }
+}
+
+/** Accepts a pasted Google Maps link, or builds a search link from an address. */
+export function mapsLink(loc?: {
+  name?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  mapsUrl?: string | null;
+} | null): string | null {
+  if (!loc) return null;
+  if (loc.mapsUrl) return loc.mapsUrl;
+  const query = [loc.name, loc.address, loc.city, loc.state].filter(Boolean).join(", ");
+  return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null;
+}
+
+export function locationText(loc?: {
+  name?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+} | null): string {
+  if (!loc) return "";
+  return [loc.name, loc.address, loc.city, loc.state].filter(Boolean).join(", ");
+}
+
 export function labelize(slug: string): string {
   return slug
     .split("-")

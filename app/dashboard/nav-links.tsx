@@ -7,6 +7,7 @@ export interface NavItem {
   href: string;
   label: string;
   icon: string; // SVG path d=
+  badge?: number;
 }
 
 export function NavLinks({ items }: { items: NavItem[] }) {
@@ -37,7 +38,12 @@ export function NavLinks({ items }: { items: NavItem[] }) {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
               </svg>
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.badge ? (
+                <span className="rounded-full bg-bata-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {item.badge > 99 ? "99+" : item.badge}
+                </span>
+              ) : null}
             </Link>
           </li>
         );

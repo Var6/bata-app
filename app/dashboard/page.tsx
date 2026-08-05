@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { dbConnect } from "@/lib/db";
-import { Activity, Project, School, User } from "@/lib/models";
+import { Activity, Project, User } from "@/lib/models";
 import { requireUser } from "@/lib/session";
-import { formatDate, formatHours, formatTime, startOfMonth, startOfWeek } from "@/lib/utils";
+import { formatDate, formatHours, formatTime, locationText, startOfMonth, startOfWeek } from "@/lib/utils";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
 function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
@@ -23,20 +23,18 @@ export default async function OverviewPage() {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  // Scope activities by role.
   const scope =
     user.role === "director"
       ? {}
       : user.role === "ngo"
         ? { ngo: user._id }
-        : { $or: [{ participants: user._id }, { createdBy: user._id }] };
+        : { "attendees.user": user._id };
 
   const [upcoming, completedCount, upcomingCount] = await Promise.all([
     Activity.find({ ...scope, status: { $in: ["scheduled", "in-progress"] }, date: { $gte: today } })
       .sort({ date: 1, startTime: 1 })
       .limit(6)
       .populate("project", "name")
-      .populate("school", "name city")
       .populate("ngo", "name org.orgName")
       .lean(),
     Activity.countDocuments({ ...scope, status: "completed" }),
@@ -46,44 +44,56 @@ export default async function OverviewPage() {
   let stats: { label: string; value: string | number; accent?: boolean }[] = [];
 
   if (user.role === "director") {
-    const [projects, schools, employees, ngos, monthAgg] = await Promise.all([
+    const [projects, employees, ngos, monthAgg] = await Promise.all([
       Project.countDocuments({}),
-      School.countDocuments({}),
       User.countDocuments({ role: "employee", active: true }),
       User.countDocuments({ role: "ngo", active: true }),
       Activity.aggregate([
         { $match: { status: "completed", date: { $gte: startOfMonth(now) } } },
-        { $project: { minutes: { $multiply: ["$durationMinutes", { $size: "$participants" }] } } },
-        { $group: { _id: null, total: { $sum: "$minutes" } } },
+        { $unwind: "$attendees" },
+        { $match: { "attendees.present": true } },
+        { $group: { _id: null, total: { $sum: "$durationMinutes" } } },
       ]),
     ]);
     stats = [
       { label: "Volunteer hours this month", value: formatHours(monthAgg[0]?.total ?? 0), accent: true },
       { label: "Projects", value: projects },
-      { label: "Schools", value: schools },
       { label: "Employees", value: employees },
       { label: "NGO partners", value: ngos },
       { label: "Upcoming activities", value: upcomingCount },
+      { label: "Completed activities", value: completedCount },
     ];
   } else if (user.role === "employee") {
     const minutesSince = async (from: Date) => {
       const agg = await Activity.aggregate([
-        { $match: { participants: user._id, status: "completed", date: { $gte: from } } },
+        { $match: { status: "completed", date: { $gte: from } } },
+        { $unwind: "$attendees" },
+        { $match: { "attendees.user": user._id, "attendees.present": true } },
         { $group: { _id: null, total: { $sum: "$durationMinutes" } } },
       ]);
       return agg[0]?.total ?? 0;
     };
-    const [week, month] = await Promise.all([minutesSince(startOfWeek(now)), minutesSince(startOfMonth(now))]);
+    const [week, month, following] = await Promise.all([
+      minutesSince(startOfWeek(now)),
+      minutesSince(startOfMonth(now)),
+      Project.countDocuments({ interested: user._id }),
+    ]);
     stats = [
       { label: "My hours this week", value: formatHours(week), accent: true },
       { label: "My hours this month", value: formatHours(month) },
-      { label: "Upcoming activities", value: upcomingCount },
-      { label: "Completed activities", value: completedCount },
+      { label: "Projects I follow", value: following },
+      { label: "Invitations upcoming", value: upcomingCount },
     ];
   } else {
+    const [projects, pendingAttendance] = await Promise.all([
+      Project.countDocuments({ ngo: user._id }),
+      Activity.countDocuments({ ngo: user._id, status: "completed", "attendees.present": null }),
+    ]);
     stats = [
       { label: "Upcoming activities", value: upcomingCount, accent: true },
+      { label: "My projects", value: projects },
       { label: "Completed activities", value: completedCount },
+      { label: "Attendance to confirm", value: pendingAttendance },
     ];
   }
 
@@ -95,16 +105,24 @@ export default async function OverviewPage() {
           user.role === "director"
             ? "Programme overview across all projects and partners."
             : user.role === "ngo"
-              ? `Activities assigned to ${user.org?.orgName || "your organisation"}.`
+              ? `Activities run by ${user.org?.orgName || "your organisation"}.`
               : "Your volunteering at a glance."
         }
       >
-        {user.role !== "ngo" && (
+        {user.role === "ngo" && (
           <Link
             href="/dashboard/activities/new"
             className="inline-flex items-center gap-2 rounded-lg bg-bata-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-bata-700"
           >
             + Schedule activity
+          </Link>
+        )}
+        {user.role === "employee" && (
+          <Link
+            href="/dashboard/projects"
+            className="inline-flex items-center gap-2 rounded-lg bg-bata-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-bata-700"
+          >
+            Browse projects
           </Link>
         )}
       </PageHeader>
@@ -125,14 +143,15 @@ export default async function OverviewPage() {
         {upcoming.length === 0 ? (
           <Card className="p-8 text-center text-sm text-zinc-500">
             Nothing scheduled yet.
-            {user.role !== "ngo" && " Use “Schedule activity” to plan the first session."}
+            {user.role === "employee" && " Follow a project to get invited to its activities."}
+            {user.role === "ngo" && " Schedule your first activity from one of your projects."}
           </Card>
         ) : (
           <div className="grid gap-3">
             {upcoming.map((a) => {
               const project = a.project as unknown as { name?: string } | null;
-              const school = a.school as unknown as { name?: string; city?: string } | null;
               const ngo = a.ngo as unknown as { name?: string; org?: { orgName?: string } } | null;
+              const where = locationText(a.location);
               return (
                 <Link key={String(a._id)} href={`/dashboard/activities/${String(a._id)}`}>
                   <Card className="flex flex-wrap items-center gap-4 p-4 transition hover:border-bata-300 hover:shadow-md">
@@ -147,9 +166,8 @@ export default async function OverviewPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-zinc-900">{a.title}</p>
                       <p className="truncate text-xs text-zinc-500">
-                        {school?.name}
-                        {school?.city ? `, ${school.city}` : ""} · with{" "}
-                        {ngo?.org?.orgName || ngo?.name} · {project?.name}
+                        {project?.name} · {ngo?.org?.orgName || ngo?.name}
+                        {where ? ` · ${where}` : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-zinc-500">
