@@ -44,33 +44,22 @@ export function SiteFooter({ dark = true }: { dark?: boolean }) {
 
   return (
     <footer className={`border-t ${base}`}>
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-6 py-4 text-xs sm:flex-row sm:justify-between">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-2 px-6 py-4 text-xs sm:grid-cols-3">
+        <span className="hidden sm:block" />
+        {/* The whole credit is the link — the URL is never written out. */}
         <a
           href="https://janmanindia.org"
           target="_blank"
           rel="noreferrer noopener"
-          className={`font-medium ${linkCls}`}
+          className={`justify-self-center font-semibold ${linkCls}`}
         >
-          janmanindia.org
+          Developed by Janman People&apos;s Foundation
         </a>
-
-        <p className="order-first text-center sm:order-0">
-          Developed by{" "}
-          <a
-            href="https://janmanindia.org"
-            target="_blank"
-            rel="noreferrer noopener"
-            className={`font-semibold ${linkCls}`}
-          >
-            Janman People&apos;s Foundation
-          </a>
-        </p>
-
         <a
           href="https://github.com/Var6"
           target="_blank"
           rel="noreferrer noopener"
-          className={`inline-flex items-center gap-1.5 font-medium ${linkCls}`}
+          className={`inline-flex items-center gap-1.5 justify-self-center font-medium sm:justify-self-end ${linkCls}`}
         >
           <GithubIcon />
           Var6
