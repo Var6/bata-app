@@ -48,6 +48,9 @@ const ProjectSchema = new Schema(
     name: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     status: { type: String, enum: ["active", "completed", "on-hold"], default: "active" },
+    // The NGO partner that manages this project. Assigned by the director;
+    // an NGO only ever sees projects where this points at them.
+    ngo: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     coverKey: { type: String }, // R2 object key
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

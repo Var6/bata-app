@@ -27,11 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { href: "/dashboard", label: "Overview", icon: icons.home },
     { href: "/dashboard/activities", label: "Activities", icon: icons.calendar },
   ];
+  nav.push({ href: "/dashboard/projects", label: "Projects", icon: icons.folder });
   if (user.role !== "ngo") {
-    nav.push(
-      { href: "/dashboard/projects", label: "Projects", icon: icons.folder },
-      { href: "/dashboard/schools", label: "Schools", icon: icons.school }
-    );
+    nav.push({ href: "/dashboard/schools", label: "Schools", icon: icons.school });
   }
   if (user.role === "director") {
     nav.push(

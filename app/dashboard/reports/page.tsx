@@ -118,7 +118,7 @@ export default async function ReportsPage(props: {
       </div>
 
       <div className="mb-8 grid grid-cols-3 gap-4">
-        <Card className="border-bata-200 bg-gradient-to-br from-bata-600 to-bata-800 p-5 text-white">
+        <Card className="border-bata-200 bg-linear-to-br from-bata-600 to-bata-800 p-5 text-white">
           <p className="text-3xl font-extrabold">{formatHours(totalMinutes)}</p>
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-bata-100">
             Total volunteer time

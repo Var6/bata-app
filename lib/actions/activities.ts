@@ -38,7 +38,6 @@ async function readActivityFields(formData: FormData): Promise<
   const title = String(formData.get("title") ?? "").trim();
   const project = String(formData.get("project") ?? "");
   const school = String(formData.get("school") ?? "");
-  const ngo = String(formData.get("ngo") ?? "");
   const dateStr = String(formData.get("date") ?? "");
   const startTime = String(formData.get("startTime") ?? "");
   const durationMinutes = Number(formData.get("durationMinutes"));
@@ -48,7 +47,6 @@ async function readActivityFields(formData: FormData): Promise<
   if (!title) return { error: "Activity title is required." };
   if (!Types.ObjectId.isValid(project)) return { error: "Please select a project." };
   if (!Types.ObjectId.isValid(school)) return { error: "Please select a school." };
-  if (!Types.ObjectId.isValid(ngo)) return { error: "Please select an NGO partner." };
   if (!dateStr || !/^\d{2}:\d{2}$/.test(startTime)) return { error: "Date and start time are required." };
   if (!Number.isFinite(durationMinutes) || durationMinutes < 15) {
     return { error: "Duration must be at least 15 minutes." };
@@ -61,16 +59,24 @@ async function readActivityFields(formData: FormData): Promise<
   }
 
   await dbConnect();
-  const [projectOk, schoolOk, ngoOk, employeeCount] = await Promise.all([
-    Project.exists({ _id: project }),
+  const [projectDoc, schoolOk, employeeCount] = await Promise.all([
+    Project.findById(project).select("ngo").lean<{ ngo?: Types.ObjectId } | null>(),
     School.exists({ _id: school }),
-    User.exists({ _id: ngo, role: "ngo", active: true }),
     User.countDocuments({ _id: { $in: participants }, role: { $in: ["employee", "director"] }, active: true }),
   ]);
-  if (!projectOk) return { error: "Selected project no longer exists." };
+  if (!projectDoc) return { error: "Selected project no longer exists." };
   if (!schoolOk) return { error: "Selected school no longer exists." };
-  if (!ngoOk) return { error: "Selected NGO no longer exists or is inactive." };
   if (employeeCount !== participants.length) return { error: "One of the selected employees is invalid." };
+
+  // The NGO always comes from the project, never from the form. This is what
+  // guarantees an NGO can only ever see activities under its own projects.
+  const ngo = projectDoc.ngo?.toString();
+  if (!ngo) {
+    return { error: "This project has no NGO partner assigned. Ask the director to assign one first." };
+  }
+  if (!(await User.exists({ _id: ngo, role: "ngo", active: true }))) {
+    return { error: "The NGO partner for this project is inactive. Ask the director to reassign it." };
+  }
 
   return {
     title,

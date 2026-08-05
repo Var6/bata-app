@@ -167,7 +167,7 @@ export default function LandingPage() {
             </p>
             <h1 className="animate-fade-up mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
               Stepping up for
-              <span className="bg-gradient-to-r from-bata-400 to-bata-600 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-bata-400 to-bata-600 bg-clip-text text-transparent">
                 {" "}public schools
               </span>
               , together.

@@ -1,8 +1,16 @@
 import { ACTIVITY_CATEGORIES, type ActivityDoc, type ProjectDoc, type SchoolDoc, type UserDoc } from "@/lib/models";
-import { labelize } from "@/lib/utils";
+import { labelize, refId } from "@/lib/utils";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Card, Field, inputCls } from "@/components/ui";
 import type { ActionState } from "@/lib/actions/auth";
+
+/** Display name of the NGO partner assigned to a project. */
+function ngoNameFor(project: ProjectDoc, ngos: UserDoc[]): string | undefined {
+  const id = refId(project.ngo);
+  if (!id) return undefined;
+  const match = ngos.find((n) => n._id.toString() === id);
+  return match?.org?.orgName || match?.name;
+}
 
 const DURATIONS = [
   [30, "30 minutes"],
@@ -51,7 +59,7 @@ export function ActivityForm({
           />
         </Field>
 
-        <Field label="Project">
+        <Field label="Project (sets the NGO partner)">
           <select
             name="project"
             required
@@ -61,11 +69,15 @@ export function ActivityForm({
             <option value="" disabled>
               Select project…
             </option>
-            {projects.map((p) => (
-              <option key={p._id.toString()} value={p._id.toString()}>
-                {p.name}
-              </option>
-            ))}
+            {projects.map((p) => {
+              const partner = ngoNameFor(p, ngos);
+              return (
+                <option key={p._id.toString()} value={p._id.toString()}>
+                  {p.name}
+                  {partner ? ` — ${partner}` : ""}
+                </option>
+              );
+            })}
           </select>
         </Field>
 
@@ -87,19 +99,6 @@ export function ActivityForm({
             {schools.map((s) => (
               <option key={s._id.toString()} value={s._id.toString()}>
                 {s.name} ({s.city})
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="NGO partner">
-          <select name="ngo" required defaultValue={activity?.ngo.toString() ?? ""} className={inputCls}>
-            <option value="" disabled>
-              Select NGO…
-            </option>
-            {ngos.map((n) => (
-              <option key={n._id.toString()} value={n._id.toString()}>
-                {n.org?.orgName || n.name}
               </option>
             ))}
           </select>
@@ -128,6 +127,11 @@ export function ActivityForm({
               ))}
             </select>
           </Field>
+        </div>
+
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-2 text-xs text-zinc-500 sm:col-span-2">
+          The NGO partner is set by the project you choose — a project belongs to
+          exactly one NGO, and only that NGO can see its activities.
         </div>
 
         <Field label="Venue (optional)" className="sm:col-span-2">

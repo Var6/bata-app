@@ -7,7 +7,7 @@ import { Badge, Card, PageHeader } from "@/components/ui";
 
 function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
   return (
-    <Card className={`p-5 ${accent ? "border-bata-200 bg-gradient-to-br from-bata-600 to-bata-800 text-white" : ""}`}>
+    <Card className={`p-5 ${accent ? "border-bata-200 bg-linear-to-br from-bata-600 to-bata-800 text-white" : ""}`}>
       <p className={`text-3xl font-extrabold ${accent ? "text-white" : "text-zinc-900"}`}>{value}</p>
       <p className={`mt-1 text-xs font-medium uppercase tracking-wide ${accent ? "text-bata-100" : "text-zinc-500"}`}>
         {label}

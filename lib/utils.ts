@@ -1,3 +1,16 @@
+/**
+ * Reads the id from a Mongoose ref field whether or not it has been populated.
+ * `String(doc)` on a populated document yields "[object Object]", so never rely
+ * on toString() directly for refs.
+ */
+export function refId(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "object" && "_id" in (value as Record<string, unknown>)) {
+    return String((value as { _id: unknown })._id);
+  }
+  return String(value);
+}
+
 export function formatDate(d: Date | string): string {
   return new Date(d).toLocaleDateString("en-IN", {
     day: "numeric",
