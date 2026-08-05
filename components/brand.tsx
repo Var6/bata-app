@@ -31,58 +31,50 @@ const GithubIcon = () => (
 );
 
 /**
- * Site footer — Janman People's Foundation credit, with janmanindia.org on the
- * left and the developer's GitHub on the right.
+ * Site footer — one simple line: janmanindia.org on the left, the Janman
+ * People's Foundation credit in the middle, the developer's GitHub on the right.
  */
 export function SiteFooter({ dark = true }: { dark?: boolean }) {
   const base = dark
-    ? "border-zinc-800 bg-zinc-950 text-zinc-400"
+    ? "border-zinc-800 bg-zinc-950 text-zinc-500"
     : "border-zinc-200 bg-white text-zinc-500";
   const linkCls = dark
-    ? "text-zinc-300 transition hover:text-white"
-    : "text-zinc-700 transition hover:text-bata-700";
+    ? "text-zinc-400 transition hover:text-white"
+    : "text-zinc-600 transition hover:text-bata-700";
 
   return (
     <footer className={`border-t ${base}`}>
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-8">
-        <div className="flex flex-wrap items-center justify-center gap-6">
-          <BataLogo light={dark} className="h-6 w-auto opacity-90" />
-          <span className={dark ? "h-6 w-px bg-zinc-700" : "h-6 w-px bg-zinc-200"} />
-          <BcpLogo light={dark} className="h-9 w-auto opacity-90" />
-        </div>
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-6 py-4 text-xs sm:flex-row sm:justify-between">
+        <a
+          href="https://janmanindia.org"
+          target="_blank"
+          rel="noreferrer noopener"
+          className={`font-medium ${linkCls}`}
+        >
+          janmanindia.org
+        </a>
 
-        <div className="flex w-full flex-col items-center gap-3 border-t border-current/10 pt-6 sm:flex-row sm:justify-between">
+        <p className="order-first text-center sm:order-0">
+          Developed by{" "}
           <a
             href="https://janmanindia.org"
             target="_blank"
             rel="noreferrer noopener"
-            className={`text-sm font-medium ${linkCls}`}
+            className={`font-semibold ${linkCls}`}
           >
-            janmanindia.org
+            Janman People&apos;s Foundation
           </a>
+        </p>
 
-          <p className="order-first text-center text-xs sm:order-none">
-            Developed by{" "}
-            <a
-              href="https://janmanindia.org"
-              target="_blank"
-              rel="noreferrer noopener"
-              className={`font-semibold ${linkCls}`}
-            >
-              Janman People&apos;s Foundation
-            </a>
-          </p>
-
-          <a
-            href="https://github.com/Var6"
-            target="_blank"
-            rel="noreferrer noopener"
-            className={`inline-flex items-center gap-1.5 text-sm font-medium ${linkCls}`}
-          >
-            <GithubIcon />
-            Var6
-          </a>
-        </div>
+        <a
+          href="https://github.com/Var6"
+          target="_blank"
+          rel="noreferrer noopener"
+          className={`inline-flex items-center gap-1.5 font-medium ${linkCls}`}
+        >
+          <GithubIcon />
+          Var6
+        </a>
       </div>
     </footer>
   );

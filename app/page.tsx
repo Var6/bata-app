@@ -175,7 +175,7 @@ export default function LandingPage() {
         />
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
-            <BcpLogo light className="animate-fade-up mb-8 h-16 w-auto sm:h-20" />
+            <BcpLogo light className="animate-fade-up mb-10 h-20 w-auto sm:h-24" />
             <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-zinc-300">
               <span className="size-1.5 rounded-full bg-bata-500" />
               Corporate Social Responsibility
@@ -230,13 +230,13 @@ export default function LandingPage() {
         <h2 className="mt-3 text-center text-3xl font-bold tracking-tight sm:text-4xl">
           One workflow, three partners
         </h2>
-        <div className="mt-14 grid gap-8 md:grid-cols-3">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((s) => (
             <div
               key={s.step}
-              className="group relative rounded-2xl border border-zinc-200 bg-zinc-50 p-8 transition hover:-translate-y-1 hover:border-bata-200 hover:shadow-xl hover:shadow-bata-600/5"
+              className="group relative rounded-2xl border border-zinc-200 bg-zinc-50 p-6 transition hover:-translate-y-1 hover:border-bata-200 hover:shadow-xl hover:shadow-bata-600/5"
             >
-              <span className="text-5xl font-extrabold text-zinc-200 transition group-hover:text-bata-100">
+              <span className="text-4xl font-extrabold text-zinc-200 transition group-hover:text-bata-100">
                 {s.step}
               </span>
               <h3 className="mt-4 text-lg font-bold">{s.title}</h3>
@@ -314,7 +314,7 @@ export default function LandingPage() {
           className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.12),transparent_60%)]"
         />
         <div className="relative mx-auto max-w-3xl px-6 text-center">
-          <BcpLogo light className="mx-auto h-14 w-auto" />
+          <BataLogo light className="mx-auto h-10 w-auto" />
           <h2 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">
             Ready to make an impact?
           </h2>

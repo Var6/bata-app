@@ -35,7 +35,8 @@ export default async function SignupPage() {
                 whenever our NGO partners plan something near you.
               </p>
             </div>
-            <BcpLogo light className="h-12 w-auto" />
+            {/* self-start stops the column-flex parent from stretching the logo */}
+            <BcpLogo light className="h-14 w-auto self-start" />
           </div>
         </section>
 

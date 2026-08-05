@@ -32,7 +32,8 @@ export default function LoginPage() {
               the Bata team — all in one portal.
             </p>
           </div>
-          <BcpLogo light className="h-12 w-auto" />
+          {/* self-start stops the column-flex parent from stretching the logo */}
+          <BcpLogo light className="h-14 w-auto self-start" />
         </div>
       </section>
 
