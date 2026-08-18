@@ -27,7 +27,8 @@ Sign in at `/login` with the seeded director account
 | Create / edit / suspend / delete projects | ✅ | — | — |
 | Onboard NGO partners, reset passwords | ✅ | — | — |
 | See a project | all | all | **only their own** |
-| Schedule & edit activities (date, time, location) | ✅ | — | ✅ (own projects) |
+| Schedule activities (date, time, location) | ✅ | — | — |
+| Edit activities / record what happened | ✅ | — | ✅ (own projects) |
 | Follow a project to get invited | ✅ | ✅ | — |
 | Confirm / decline attendance | ✅ | ✅ | — |
 | Record who actually attended | ✅ | — | ✅ |
@@ -41,7 +42,7 @@ only be used once). NGO accounts are created by the CSR team.
 
 1. CSR team creates a project, assigns it to one NGO partner, and sets its location.
 2. Employees browse projects and press **I'm interested** to follow one.
-3. The NGO schedules an activity — date, time, and a pasted Google Maps link.
+3. The Bata admin schedules an activity — date, time, and a pasted Google Maps link.
 4. Everyone following that project is notified and can confirm.
 5. Each confirmation notifies **only that project's NGO** — never all partners.
 6. When the activity is completed, the NGO records who actually turned up.

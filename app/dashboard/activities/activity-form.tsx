@@ -145,7 +145,7 @@ export function ActivityForm({
 
         <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 sm:col-span-2">
           Everyone following this project is notified as soon as you save, and can confirm whether
-          they will join. You will be told individually who is coming.
+          they will join. The project&apos;s NGO partner is told individually who is coming.
         </div>
 
         <div className="sm:col-span-2">

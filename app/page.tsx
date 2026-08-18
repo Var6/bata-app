@@ -16,8 +16,8 @@ const steps = [
   },
   {
     step: "02",
-    title: "NGOs plan the work",
-    text: "The NGO on the ground knows when the awareness camp or the weekly distribution happens, so they schedule the activity and pin the exact location.",
+    title: "Bata schedules activities",
+    text: "The Bata admin plans each activity with the NGO on the ground — date, time, and a pinned Google Maps location for the camp or distribution.",
   },
   {
     step: "03",
@@ -44,8 +44,8 @@ const features = [
     ),
   },
   {
-    title: "NGO-led scheduling",
-    text: "NGO partners plan sessions with date, time and a pinned Google Maps location, so volunteers never get lost.",
+    title: "Activity scheduling",
+    text: "The Bata admin plans sessions with date, time and a pinned Google Maps location, so volunteers never get lost.",
     icon: (
       <path
         strokeLinecap="round"
@@ -122,7 +122,7 @@ const roles = [
     color: "bg-violet-600",
     points: [
       "See only the projects assigned to you",
-      "Schedule activities with date, time and location",
+      "See every activity scheduled under them",
       "See which Bata employees are coming",
       "Confirm who actually attended",
     ],
@@ -164,14 +164,18 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-zinc-950 pb-24 pt-36 text-white">
-        <div
+      <section className="relative overflow-hidden bg-zinc-900 pb-24 pt-36 text-white">
+        {/* Real programme photo from janmanindia.org */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/photo-hero.jpg"
+          alt=""
           aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(204,34,41,0.35),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(204,34,41,0.18),transparent_50%)]"
+          className="absolute inset-0 h-full w-full object-cover"
         />
         <div
           aria-hidden
-          className="animate-float absolute -right-40 -top-40 size-[480px] rounded-full bg-bata-600/20 blur-3xl"
+          className="absolute inset-0 bg-[linear-gradient(100deg,rgba(24,24,27,0.96)_0%,rgba(24,24,27,0.88)_45%,rgba(63,10,12,0.55)_75%,rgba(63,10,12,0.35)_100%)]"
         />
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
@@ -247,27 +251,27 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="scroll-mt-24 bg-zinc-950 py-24 text-white">
+      <section id="features" className="scroll-mt-24 border-y border-zinc-100 bg-zinc-50 py-24">
         <div className="mx-auto max-w-6xl px-6">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-bata-500">
             Features
           </p>
-          <h2 className="mt-3 text-center text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-3 text-center text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
             Everything the programme needs
           </h2>
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
               <div
                 key={f.title}
-                className="rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-bata-600/40 hover:bg-white/10"
+                className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-bata-200 hover:shadow-lg hover:shadow-bata-600/5"
               >
-                <div className="flex size-11 items-center justify-center rounded-xl bg-bata-600/15 text-bata-400">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-bata-50 text-bata-600">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="size-6">
                     {f.icon}
                   </svg>
                 </div>
-                <h3 className="mt-4 font-semibold">{f.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">{f.text}</p>
+                <h3 className="mt-4 font-semibold text-zinc-900">{f.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">{f.text}</p>
               </div>
             ))}
           </div>

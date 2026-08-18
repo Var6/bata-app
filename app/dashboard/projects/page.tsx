@@ -153,7 +153,7 @@ export default async function ProjectsPage(props: { searchParams: Promise<{ welc
           isDirector
             ? "Funded programmes. The CSR team creates them and assigns each to one NGO partner."
             : isNgo
-              ? "Projects Bata has assigned to your organisation. Schedule activities from here."
+              ? "Projects Bata has assigned to your organisation, and the activities scheduled under them."
               : "Follow a project to hear about its activities and join in."
         }
       />
@@ -249,7 +249,7 @@ export default async function ProjectsPage(props: { searchParams: Promise<{ welc
                     <Link href={`/dashboard/activities?project=${id}`} className="font-medium text-bata-600 hover:underline">
                       {counts.get(id) ?? 0} {(counts.get(id) ?? 0) === 1 ? "activity" : "activities"} →
                     </Link>
-                    {isNgo && !suspended && (
+                    {isDirector && !suspended && (
                       <Link
                         href={`/dashboard/activities/new?project=${id}`}
                         className="rounded-lg bg-bata-600 px-3 py-1.5 font-semibold text-white transition hover:bg-bata-700"

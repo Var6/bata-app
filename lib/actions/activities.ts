@@ -117,9 +117,9 @@ function parsePoints(formData: FormData): { text: string }[] {
     .map((text) => ({ text }));
 }
 
-/** NGO partners (and the CSR team) schedule activities. */
+/** Only the Bata admin (CSR team) schedules activities. */
 export async function createActivity(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const me = await requireUser(["ngo", "director"]);
+  const me = await requireUser(["director"]);
   const result = await readActivityFields(formData, me);
   if ("error" in result) return { error: result.error };
   const { fields, project } = result;

@@ -11,13 +11,12 @@ export default function LoginPage() {
     <main className="flex flex-1">
       {/* Brand panel */}
       <section className="relative hidden w-1/2 overflow-hidden bg-zinc-950 lg:block">
+        {/* Real programme photo from janmanindia.org */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/photo-classroom.jpg" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
         <div
           aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(204,34,41,0.4),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(204,34,41,0.25),transparent_50%)]"
-        />
-        <div
-          aria-hidden
-          className="animate-float absolute -bottom-32 -left-32 size-105 rounded-full bg-bata-600/25 blur-3xl"
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(24,24,27,0.85)_0%,rgba(24,24,27,0.55)_45%,rgba(24,24,27,0.92)_100%)]"
         />
         <div className="relative flex h-full flex-col justify-between p-12">
           <Link href="/">

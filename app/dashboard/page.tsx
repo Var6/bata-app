@@ -109,7 +109,7 @@ export default async function OverviewPage() {
               : "Your volunteering at a glance."
         }
       >
-        {user.role === "ngo" && (
+        {user.role === "director" && (
           <Link
             href="/dashboard/activities/new"
             className="inline-flex items-center gap-2 rounded-lg bg-bata-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-bata-700"
@@ -144,7 +144,7 @@ export default async function OverviewPage() {
           <Card className="p-8 text-center text-sm text-zinc-500">
             Nothing scheduled yet.
             {user.role === "employee" && " Follow a project to get invited to its activities."}
-            {user.role === "ngo" && " Schedule your first activity from one of your projects."}
+            {user.role === "ngo" && " The Bata CSR team schedules activities under your projects."}
           </Card>
         ) : (
           <div className="grid gap-3">

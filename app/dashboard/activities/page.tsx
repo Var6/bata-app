@@ -48,11 +48,11 @@ export default async function ActivitiesPage(props: {
         title="Activities"
         subtitle={
           user.role === "ngo"
-            ? "Sessions your organisation has scheduled. Bata volunteers confirm and you record who attended."
+            ? "Sessions scheduled under your projects. Bata volunteers confirm and you record who attended."
             : "Activities on the projects you follow."
         }
       >
-        {user.role !== "employee" && (
+        {user.role === "director" && (
           <Link
             href="/dashboard/activities/new"
             className="inline-flex items-center gap-2 rounded-lg bg-bata-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-bata-700"
@@ -90,7 +90,7 @@ export default async function ActivitiesPage(props: {
           title="No activities found"
           hint={
             user.role === "ngo"
-              ? "Schedule your first activity from one of your projects."
+              ? "The Bata CSR team schedules activities under your projects — they appear here."
               : "Follow a project and you'll be invited to its activities."
           }
         />
