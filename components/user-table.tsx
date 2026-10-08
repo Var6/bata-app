@@ -23,7 +23,16 @@ function OrgFields({ user }: { user?: UserDoc }) {
   );
 }
 
-export function UserManager({ users, role }: { users: UserDoc[]; role: "employee" | "ngo" }) {
+export function UserManager({
+  users,
+  role,
+  emptyHint,
+}: {
+  users: UserDoc[];
+  role: "employee" | "ngo";
+  /** Shown when the list is empty, e.g. "No employees match your search". */
+  emptyHint?: string;
+}) {
   const noun = role === "ngo" ? "NGO partner" : "employee";
 
   return (
@@ -38,8 +47,13 @@ export function UserManager({ users, role }: { users: UserDoc[]; role: "employee
           <Field label={role === "ngo" ? "Account holder name" : "Full name"}>
             <input name="name" required className={inputCls} />
           </Field>
-          <Field label="Email (used to sign in)">
-            <input type="email" name="email" required className={inputCls} />
+          {role === "employee" && (
+            <Field label="Employee code (used to sign in)">
+              <input name="employeeCode" placeholder="e.g. 3146" className={`${inputCls} uppercase`} />
+            </Field>
+          )}
+          <Field label={role === "employee" ? "Email (optional)" : "Email (used to sign in)"}>
+            <input type="email" name="email" required={role === "ngo"} className={inputCls} />
           </Field>
           <Field label="Phone (optional)">
             <input name="phone" className={inputCls} />
@@ -54,7 +68,9 @@ export function UserManager({ users, role }: { users: UserDoc[]; role: "employee
           <div className="sm:col-span-2">
             <SubmitButton>Create account</SubmitButton>
             <p className="mt-2 text-xs text-zinc-400">
-              A temporary password is generated and, if email is configured, sent to the {noun}.
+              A temporary password is generated and shown once here
+              {role === "employee" ? " (and emailed, if an email is given and email is configured)" : " and, if email is configured, emailed"}
+              .
             </p>
           </div>
         </ActionForm>
@@ -62,7 +78,10 @@ export function UserManager({ users, role }: { users: UserDoc[]; role: "employee
 
       {/* List */}
       {users.length === 0 ? (
-        <EmptyState title={`No ${noun}s yet`} hint={`Use “Add ${noun}” above to create the first account.`} />
+        <EmptyState
+          title={emptyHint ?? `No ${noun}s yet`}
+          hint={emptyHint ? undefined : `Use “Add ${noun}” above to create the first account.`}
+        />
       ) : (
         <div className="grid gap-3">
           {users.map((u) => {
@@ -83,10 +102,14 @@ export function UserManager({ users, role }: { users: UserDoc[]; role: "employee
                     </p>
                     <p className="truncate text-xs text-zinc-500">
                       {role === "ngo" && <>Contact: {u.org?.contactPerson || u.name} · </>}
-                      {u.email}
-                      {u.employeeCode ? ` · ${u.employeeCode}` : ""}
-                      {u.phone ? ` · ${u.phone}` : ""}
-                      {role === "employee" && u.designation ? ` · ${u.designation}` : ""}
+                      {[
+                        u.employeeCode ? `Code ${u.employeeCode}` : null,
+                        u.email ?? (role === "employee" ? "no email on file" : null),
+                        u.phone,
+                        role === "employee" ? u.designation : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -113,9 +136,18 @@ export function UserManager({ users, role }: { users: UserDoc[]; role: "employee
                         <input name="phone" defaultValue={u.phone ?? ""} className={inputCls} />
                       </Field>
                       {role === "employee" ? (
-                        <Field label="Designation">
-                          <input name="designation" defaultValue={u.designation ?? ""} className={inputCls} />
-                        </Field>
+                        <>
+                          <Field label="Employee code">
+                            <input
+                              name="employeeCode"
+                              defaultValue={u.employeeCode ?? ""}
+                              className={`${inputCls} uppercase`}
+                            />
+                          </Field>
+                          <Field label="Designation">
+                            <input name="designation" defaultValue={u.designation ?? ""} className={inputCls} />
+                          </Field>
+                        </>
                       ) : (
                         <OrgFields user={u} />
                       )}

@@ -16,7 +16,8 @@ export interface SessionPayload {
   userId: string;
   role: Role;
   name: string;
-  email: string;
+  /** Absent for employees who sign in with their employee code only. */
+  email?: string;
   [key: string]: unknown;
 }
 

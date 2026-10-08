@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# HR employee master (real names + login codes) — never publish
+scripts/data/bata-employees.psv

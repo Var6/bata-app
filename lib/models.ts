@@ -4,11 +4,12 @@ export const ROLES = ["director", "employee", "ngo"] as const;
 export type Role = (typeof ROLES)[number];
 
 /**
- * Bata employee code format. Placeholder until Bata confirms the official
- * pattern — change this one constant and both signup and validation follow.
+ * Bata employee code format. The HR master uses 4-digit numeric codes (e.g.
+ * 3146); older self-registered accounts used prefixed codes (e.g. BATA-10234),
+ * so both are accepted. Employees sign in with this code.
  */
 export const EMPLOYEE_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9/-]{2,19}$/;
-export const EMPLOYEE_CODE_HINT = "3–20 letters, digits, hyphens or slashes (e.g. BATA-10234)";
+export const EMPLOYEE_CODE_HINT = "3–20 letters, digits, hyphens or slashes (e.g. 3146 or BATA-10234)";
 
 export const ACTIVITY_CATEGORIES = [
   "computer-class",
@@ -60,7 +61,11 @@ const LocationSchema = new Schema(
 const UserSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    // Sign-in identifier for the CSR team and NGO partners. Employees imported
+    // from the HR master sign in with `employeeCode` and may have no email yet,
+    // so this is optional and the unique index is sparse. Never store "" or
+    // null here — leave the field absent (see updateProfile / the importer).
+    email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ROLES, required: true, index: true },
     phone: { type: String, trim: true },

@@ -20,6 +20,31 @@ npm run dev                  # http://localhost:3000
 Sign in at `/login` with the seeded director account
 (default: `director@bata.com` / `Director@123` — change it in Settings).
 
+## Employee accounts (HR import)
+
+Bata employees sign in with their **employee code** (e.g. `3146`) rather than an
+email. The HR master lives in `scripts/data/bata-employees.psv`
+(`code|name|designation`, one row per employee; git-ignored because it lists
+real people — keep a copy outside the repo) and is loaded with:
+
+```bash
+npm run import:employees              # create missing accounts, update changed names/designations
+npm run import:employees -- --dry-run # report only
+npm run import:employees -- --reset-passwords   # also reset every listed employee to the starting password
+```
+
+New accounts get the starting password from `EMPLOYEE_DEFAULT_PASSWORD` in
+`.env.local` (required; never commit it) and are asked to set their own password
+on first login. The import is
+safe to re-run: it never touches an existing account's password, email, phone,
+photo or active flag unless `--reset-passwords` is passed. Accounts that are in the
+portal but not in the file are listed and left alone.
+
+The CSR team can reset any employee's password from **Dashboard → Employees →
+Manage account**; the temporary password is shown once on screen (and emailed
+if the employee has added an email to their profile). Employees may add an email
+in Settings to receive activity invitations, but it is optional.
+
 ## Roles
 
 | Capability | CSR Team | Employee | NGO |
@@ -35,8 +60,10 @@ Sign in at `/login` with the seeded director account
 | Engagement reports + PDF export | ✅ | own stats | — |
 | Edit own name, email, password, photo | ✅ | ✅ | ✅ |
 
-Employees **self-register** at `/signup` with their Bata employee code (each code can
-only be used once). NGO accounts are created by the CSR team.
+Employees from the HR import sign in with their employee code and the starting
+password (see above). An employee whose code is not in the portal yet can
+**self-register** at `/signup` (each code can only be used once). NGO accounts are
+created by the CSR team.
 
 ## The activity lifecycle
 
@@ -58,6 +85,7 @@ only be used once). NGO accounts are created by the CSR team.
   `EMAILJS_PRIVATE_KEY` — EmailJS (optional; the EmailJS template must use the
   variables `to_email`, `to_name`, `subject`, `message`)
 - `DIRECTOR_NAME` / `DIRECTOR_EMAIL` / `DIRECTOR_PASSWORD` — used by `npm run seed`
+- `EMPLOYEE_DEFAULT_PASSWORD` — starting password used by `npm run import:employees`
 
 ## Architecture notes
 
@@ -72,5 +100,12 @@ only be used once). NGO accounts are created by the CSR team.
   Maps link so volunteers can navigate. (There is no separate "schools" module —
   Bata works with more than schools.)
 - **Images** are stored in R2 and served through `/api/files/[key]`, which
-  redirects to a short-lived presigned URL (sign-in required).
+  redirects to a short-lived presigned URL (sign-in required). Uploads go
+  through Server Actions, so `next.config.ts` raises the action body limit
+  (Next's default of 1 MB is smaller than a phone photo); `lib/upload.ts` still
+  caps each image at 5 MB. `app/dashboard/error.tsx` turns any remaining
+  failure into a recoverable message.
+- **Email is optional for employees** (`User.email` has a sparse unique index);
+  they sign in with `employeeCode`. Never store `""`/`null` in `email` — leave
+  the field absent.
 # bata-app

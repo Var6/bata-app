@@ -14,16 +14,17 @@ export function LoginForm() {
         <>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900">Welcome back</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Sign in as CSR team, Bata employee, or NGO partner.
+            Bata employees sign in with their employee code. The CSR team and NGO partners use
+            their email.
           </p>
           <ActionForm action={login} className="mt-6 space-y-4">
-            <Field label="Email">
+            <Field label="Employee code or email">
               <input
-                type="email"
+                type="text"
                 name="email"
                 required
-                autoComplete="email"
-                placeholder="you@example.com"
+                autoComplete="username"
+                placeholder="e.g. 3146 or you@example.com"
                 className={inputCls}
               />
             </Field>
@@ -53,7 +54,8 @@ export function LoginForm() {
         <>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900">Reset password</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            We&apos;ll email you a temporary password if an account exists.
+            We&apos;ll email you a temporary password if an account exists. Employees without an
+            email on their profile should ask the Bata CSR team to reset it.
           </p>
           <ActionForm action={forgotPassword} className="mt-6 space-y-4">
             <Field label="Email">

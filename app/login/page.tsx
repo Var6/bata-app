@@ -44,7 +44,7 @@ export default function LoginPage() {
           </Link>
           <LoginForm />
           <p className="mt-6 text-center text-sm text-zinc-500">
-            Bata employee without an account?{" "}
+            Bata employee whose code isn&apos;t set up yet?{" "}
             <Link href="/signup" className="font-semibold text-bata-600 hover:underline">
               Register here
             </Link>

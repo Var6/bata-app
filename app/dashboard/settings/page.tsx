@@ -22,7 +22,7 @@ export default async function SettingsPage(props: {
 
       {mustChange && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800">
-          You are using a temporary password. Please set a new one below.
+          You are using a temporary or starting password. Please set your own password below.
         </div>
       )}
 
@@ -53,8 +53,21 @@ export default async function SettingsPage(props: {
             <Field label="Full name">
               <input name="name" required defaultValue={user.name} className={inputCls} />
             </Field>
-            <Field label="Email (used to sign in)">
-              <input type="email" name="email" required defaultValue={user.email} className={inputCls} />
+            <Field label={user.role === "employee" ? "Email (optional)" : "Email (used to sign in)"}>
+              <input
+                type="email"
+                name="email"
+                required={user.role !== "employee"}
+                defaultValue={user.email ?? ""}
+                placeholder={user.role === "employee" ? "you@bata.com" : undefined}
+                className={inputCls}
+              />
+              {user.role === "employee" && (
+                <span className="mt-1 block text-xs text-zinc-400">
+                  You sign in with your employee code{user.employeeCode ? ` (${user.employeeCode})` : ""}.
+                  Add an email to receive activity invitations and password resets.
+                </span>
+              )}
             </Field>
             <Field label="Phone">
               <input name="phone" defaultValue={user.phone ?? ""} className={inputCls} />

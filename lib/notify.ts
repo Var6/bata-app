@@ -43,7 +43,7 @@ export async function notify(inputs: NotifyInput[]): Promise<void> {
   await Promise.all(
     emailTargets.map(async (n) => {
       const to = byId.get(String(n.user));
-      if (!to) return;
+      if (!to?.email) return; // imported employees may not have an email yet
       await sendEmail({
         toEmail: to.email,
         toName: to.name,

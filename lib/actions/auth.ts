@@ -15,15 +15,23 @@ export interface ActionState {
   success?: string;
 }
 
+/**
+ * Sign in with either an email address (CSR team, NGO partners, employees who
+ * added one) or a Bata employee code (every employee from the HR master).
+ */
 export async function login(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const identifier = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Please enter your email and password." };
+  if (!identifier || !password) {
+    return { error: "Please enter your email or employee code, and your password." };
+  }
 
   await dbConnect();
-  const user = await User.findOne({ email });
+  const user = identifier.includes("@")
+    ? await User.findOne({ email: identifier.toLowerCase() })
+    : await User.findOne({ employeeCode: identifier.toUpperCase() });
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    return { error: "Invalid email or password." };
+    return { error: "Invalid email / employee code or password." };
   }
   if (!user.active) {
     return { error: "Your account has been deactivated. Please contact the Bata CSR team." };
@@ -33,7 +41,7 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
     userId: user._id.toString(),
     role: user.role,
     name: user.name,
-    email: user.email,
+    email: user.email ?? undefined,
   });
 
   redirect(user.mustChangePassword ? "/dashboard/settings?force=1" : "/dashboard");
@@ -63,7 +71,8 @@ export async function signup(_prev: ActionState, formData: FormData): Promise<Ac
   await dbConnect();
   if (await User.exists({ employeeCode })) {
     return {
-      error: "That employee code is already registered. If it is yours, sign in or reset your password.",
+      error:
+        "That employee code already has an account. Sign in with your employee code and the password the CSR team gave you, or ask them to reset it.",
     };
   }
   if (await User.exists({ email })) {
@@ -87,7 +96,7 @@ export async function signup(_prev: ActionState, formData: FormData): Promise<Ac
     userId: user._id.toString(),
     role: user.role,
     name: user.name,
-    email: user.email,
+    email: user.email ?? undefined,
   });
   redirect("/dashboard/projects?welcome=1");
 }
@@ -100,6 +109,12 @@ export async function logout() {
 export async function forgotPassword(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!email) return { error: "Please enter your email address." };
+  if (!email.includes("@")) {
+    return {
+      error:
+        "Password resets by email need the email address on your profile. If you only have an employee code, ask the Bata CSR team to reset your password.",
+    };
+  }
 
   if (!emailConfigured()) {
     return { error: "Email service is not configured. Please ask the Bata CSR team to reset your password." };
@@ -110,7 +125,7 @@ export async function forgotPassword(_prev: ActionState, formData: FormData): Pr
   const genericOk = {
     success: "If an account exists for that email, a temporary password has been sent.",
   };
-  if (!user) return genericOk;
+  if (!user?.email) return genericOk;
 
   const temp = generateTempPassword();
   const sent = await sendEmail({
@@ -149,19 +164,24 @@ export async function changePassword(_prev: ActionState, formData: FormData): Pr
   return { success: "Password updated successfully." };
 }
 
-/** Update your own name, email, phone, designation and profile picture. */
+/**
+ * Update your own name, email, phone, designation and profile picture.
+ * Employees sign in with their employee code, so for them the email is
+ * optional; the CSR team and NGO partners sign in with it, so they must keep one.
+ */
 export async function updateProfile(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const me = await requireUser();
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!name) return { error: "Name is required." };
-  if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email address." };
+  if (email && !/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email address." };
+  if (!email && me.role !== "employee") return { error: "Email is required — it is how you sign in." };
 
   await dbConnect();
   const user = await User.findById(me._id);
   if (!user) return { error: "Account not found." };
 
-  if (email !== user.email && (await User.exists({ email, _id: { $ne: user._id } }))) {
+  if (email && email !== user.email && (await User.exists({ email, _id: { $ne: user._id } }))) {
     return { error: "That email address is already used by another account." };
   }
 
@@ -172,9 +192,10 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
     return { error: e instanceof Error ? e.message : "Image upload failed." };
   }
 
-  const emailChanged = email !== user.email;
+  const emailChanged = (email || undefined) !== (user.email || undefined);
   user.name = name;
-  user.email = email;
+  // Never store "" — the unique index is sparse, so the field must be absent.
+  user.email = email || undefined;
   user.phone = String(formData.get("phone") ?? "").trim() || undefined;
   if (user.role === "employee") {
     user.designation = String(formData.get("designation") ?? "").trim() || undefined;
@@ -194,14 +215,15 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
     userId: user._id.toString(),
     role: user.role,
     name: user.name,
-    email: user.email,
+    email: user.email ?? undefined,
   });
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");
   return {
-    success: emailChanged
-      ? "Profile updated. Use your new email address the next time you sign in."
-      : "Profile updated.",
+    success:
+      emailChanged && user.email
+        ? "Profile updated. You can now also sign in with your email address."
+        : "Profile updated.",
   };
 }

@@ -111,7 +111,7 @@ const roles = [
     role: "Bata Employee",
     color: "bg-zinc-800",
     points: [
-      "Register with your employee code",
+      "Sign in with your employee code",
       "Follow the projects you care about",
       "Get notified when an activity is planned",
       "Confirm attendance and get directions",
@@ -199,10 +199,10 @@ export default function LandingPage() {
             </p>
             <div className="animate-fade-up-slow mt-10 flex flex-wrap gap-4">
               <Link
-                href="/signup"
+                href="/login"
                 className="rounded-xl bg-bata-600 px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-bata-600/30 transition hover:-translate-y-0.5 hover:bg-bata-500"
               >
-                Register as a Bata employee
+                Sign in with your employee code
               </Link>
               <a
                 href="#how"
@@ -323,7 +323,7 @@ export default function LandingPage() {
             Ready to make an impact?
           </h2>
           <p className="mt-3 text-bata-100">
-            Bata employees can register with their employee code. NGO partners are onboarded by the CSR team.
+            Bata employees sign in with their employee code; anyone not yet on the portal can register with it. NGO partners are onboarded by the CSR team.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link

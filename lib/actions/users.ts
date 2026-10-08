@@ -1,9 +1,17 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { Types } from "mongoose";
 import { revalidatePath } from "next/cache";
 import { dbConnect } from "@/lib/db";
-import { Activity, Project, User, type Role } from "@/lib/models";
+import {
+  Activity,
+  EMPLOYEE_CODE_HINT,
+  EMPLOYEE_CODE_PATTERN,
+  Project,
+  User,
+  type Role,
+} from "@/lib/models";
 import { requireUser } from "@/lib/session";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import { generateTempPassword } from "@/lib/utils";
@@ -18,7 +26,31 @@ function pathFor(role: Role) {
   return role === "ngo" ? "/dashboard/ngos" : "/dashboard/employees";
 }
 
-/** Director creates an employee or NGO account. */
+/**
+ * Validates an employee code typed by the director. Returns the normalised
+ * code, or an error. `exceptId` excludes the account being edited.
+ */
+async function readEmployeeCode(
+  formData: FormData,
+  exceptId?: Types.ObjectId
+): Promise<{ employeeCode?: string } | { error: string }> {
+  const employeeCode = String(formData.get("employeeCode") ?? "").trim().toUpperCase();
+  if (!employeeCode) return { employeeCode: undefined };
+  if (!EMPLOYEE_CODE_PATTERN.test(employeeCode)) {
+    return { error: `That employee code doesn't look right — expected ${EMPLOYEE_CODE_HINT}.` };
+  }
+  const clash = await User.exists(
+    exceptId ? { employeeCode, _id: { $ne: exceptId } } : { employeeCode }
+  );
+  if (clash) return { error: `Employee code ${employeeCode} is already used by another account.` };
+  return { employeeCode };
+}
+
+/**
+ * Director creates an employee or NGO account. NGO partners need an email (it is
+ * their sign-in). Employees need an employee code and/or an email — most sign in
+ * with the code alone, as the HR import does.
+ */
 export async function createUser(_prev: UserActionState, formData: FormData): Promise<UserActionState> {
   const me = await requireUser(["director"]);
 
@@ -27,16 +59,26 @@ export async function createUser(_prev: UserActionState, formData: FormData): Pr
 
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  if (!name || !email) return { error: "Name and email are required." };
-  if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email address." };
+  if (!name) return { error: "Name is required." };
+  if (email && !/^\S+@\S+\.\S+$/.test(email)) return { error: "Please enter a valid email address." };
+  if (!email && role === "ngo") return { error: "NGO partners sign in with their email, so it is required." };
 
   await dbConnect();
-  if (await User.exists({ email })) return { error: "An account with this email already exists." };
+  if (email && (await User.exists({ email }))) return { error: "An account with this email already exists." };
+
+  let employeeCode: string | undefined;
+  if (role === "employee") {
+    const codeResult = await readEmployeeCode(formData);
+    if ("error" in codeResult) return { error: codeResult.error };
+    employeeCode = codeResult.employeeCode;
+    if (!employeeCode && !email) return { error: "Enter the employee code, an email address, or both." };
+  }
 
   const temp = generateTempPassword();
   await User.create({
     name,
-    email,
+    email: email || undefined,
+    employeeCode,
     passwordHash: await bcrypt.hash(temp, 10),
     role,
     phone: String(formData.get("phone") ?? "").trim() || undefined,
@@ -56,19 +98,22 @@ export async function createUser(_prev: UserActionState, formData: FormData): Pr
   });
 
   let emailed = false;
-  if (emailConfigured()) {
+  if (email && emailConfigured()) {
+    const signIn = employeeCode ? `Employee code: ${employeeCode}\nEmail: ${email}` : `Email: ${email}`;
     const sent = await sendEmail({
       toEmail: email,
       toName: name,
       subject: "Welcome to the Bata CSR Portal",
-      message: `Hello ${name},\n\nAn account has been created for you on the Bata CSR Portal.\n\nEmail: ${email}\nTemporary password: ${temp}\n\nPlease log in and change your password from Settings.\n\n— Bata CSR Portal`,
+      message: `Hello ${name},\n\nAn account has been created for you on the Bata CSR Portal.\n\n${signIn}\nTemporary password: ${temp}\n\nPlease log in and change your password from Settings.\n\n— Bata CSR Portal`,
     });
     emailed = sent.ok;
   }
 
   revalidatePath(pathFor(role));
   return {
-    success: `${role === "ngo" ? "NGO" : "Employee"} account created${emailed ? " and credentials emailed" : ""}.`,
+    success: `${role === "ngo" ? "NGO" : "Employee"} account created${emailed ? " and credentials emailed" : ""}.${
+      employeeCode ? ` They sign in with employee code ${employeeCode}.` : ""
+    }`,
     tempPassword: temp,
   };
 }
@@ -83,11 +128,17 @@ export async function updateUser(_prev: ActionState, formData: FormData): Promis
   const user = await User.findById(id);
   if (!user || user.role === "director") return { error: "Account not found." };
 
-  user.name = name;
-  user.phone = String(formData.get("phone") ?? "").trim() || undefined;
   if (user.role === "employee") {
+    const codeResult = await readEmployeeCode(formData, user._id);
+    if ("error" in codeResult) return { error: codeResult.error };
+    if (!codeResult.employeeCode && !user.email) {
+      return { error: "This employee has no email, so the employee code is their only way to sign in." };
+    }
+    user.employeeCode = codeResult.employeeCode;
     user.designation = String(formData.get("designation") ?? "").trim() || undefined;
   }
+  user.name = name;
+  user.phone = String(formData.get("phone") ?? "").trim() || undefined;
   if (user.role === "ngo") {
     user.org = {
       orgName: String(formData.get("orgName") ?? "").trim(),
@@ -148,7 +199,7 @@ export async function resetPassword(_prev: UserActionState, formData: FormData):
   await user.save();
 
   let emailed = false;
-  if (emailConfigured()) {
+  if (user.email && emailConfigured()) {
     const sent = await sendEmail({
       toEmail: user.email,
       toName: user.name,
@@ -160,7 +211,9 @@ export async function resetPassword(_prev: UserActionState, formData: FormData):
 
   revalidatePath(pathFor(user.role));
   return {
-    success: `Password reset for ${user.name}${emailed ? " and emailed to them" : ""}.`,
+    success: `Password reset for ${user.name}${
+      emailed ? " and emailed to them" : user.email ? "" : " — share it with them directly (no email on file)"
+    }.`,
     tempPassword: temp,
   };
 }
